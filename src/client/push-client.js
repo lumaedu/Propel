@@ -61,6 +61,26 @@ const registrationReady = function(registration) {
 };
 
 /**
+* Helper function to convert an application server's public key,
+* which is base 64 URL safe encoded, to a UInt8Array
+* as this is the expected input of the subscribe call
+*/
+function urlB64ToUint8Array(base64String) {
+  const padding = '='.repeat((4 - base64String.length % 4) % 4);
+  const base64 = (base64String + padding)
+    .replace(/\-/g, '+')
+    .replace(/_/g, '/');
+
+  const rawData = window.atob(base64);
+  const outputArray = new Uint8Array(rawData.length);
+
+  for (let i = 0; i < rawData.length; ++i) {
+    outputArray[i] = rawData.charCodeAt(i);
+  }
+  return outputArray;
+}
+
+/**
  * PushClient is a front end library that simplifies adding push to your
  * site.
  */
@@ -126,7 +146,7 @@ export default class PushClient extends EventDispatch {
    * @return {Promise<PushSubscription>} A Promise that
    *  resolves with a PushSubscription if successful.
    */
-  subscribe() {
+  subscribe(applicationServerPublicKey) {
     // Check for permission
     return this.requestPermission(false)
     .then(permissionStatus => {
@@ -142,7 +162,11 @@ export default class PushClient extends EventDispatch {
     })
     .then(registrationReady)
     .then(registration => {
-      return registration.pushManager.subscribe({userVisibleOnly: true})
+      var applicationServerKey = urlB64ToUint8Array(applicationServerPublicKey);
+      return registration.pushManager.subscribe({
+        userVisibleOnly: true,
+         applicationServerKey: applicationServerKey
+       })
       .catch(err => {
         return this._dispatchStatusUpdate()
         .then(() => {
