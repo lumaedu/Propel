@@ -164,7 +164,7 @@ export default class PushClient extends EventDispatch {
     .then(registration => {
 
       // Subscribing with application server key
-      var applicationServerKey = urlB64ToUint8Array(applicationServerPublicKey);
+      const applicationServerKey = urlB64ToUint8Array(applicationServerPublicKey);
       return registration.pushManager.subscribe({
         userVisibleOnly: true,
          applicationServerKey: applicationServerKey
